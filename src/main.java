@@ -1,27 +1,23 @@
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 
 public class main {
-    static String actual_Host = "1530";
-    static String expected_Host = "1522";
-    static String actual_Local = "127.0.0.1";
-    static String expected_Local = "localhost";
-    static String actual_Orcl = "orcl30";
-    static String expected_Orcl = "orcl18";
-    static String actual_ST = "TEST_ST";
-    static String expected_ST = "PAP_ST";
-    static String actual_EDI = "TEST_EDI_DEV";
-    static String expected_EDI = "PAP_EDI_DEV";
-    static String actual_IF = "TEST_ST_IF";
-    static String expected_IF = "PAP_ST_IF";
-    static String rootURL = "D:\\PAP_SERVER\\EXE";
-    static String[] arrURL = { 
-            "\\EXE_C3IT_SERVER\\conf\\tsb.conf", 
+    static String actual_Project = "PAP", expected_Project = "PAP";
+    static String actual_Port = "1522", expected_Port = "1522";
+    static String actual_Host = "127.0.0.1", expected_Host = "127.0.0.1";
+    static String actual_Orcl = "orcl18", expected_Orcl = "orcl18";
+    static String actual_ST = "PAP_ST", expected_ST = "PAP_ST";
+    static String actual_EDI = "PAP_EDI_DEV", expected_EDI = "PAP_EDI_DEV";
+    static String actual_IF = "PAP_ST_IF", expected_IF = "PAP_ST_IF";
+    static String rootURL = "D:\\CATOS_8.1_SERVER\\EXE";
+    static String[] arrURL = {
+            "\\EXE_C3IT_SERVER\\conf\\tsb.conf",
             "\\EXE_XIS_SERVER\\config\\server-applicationContext.properties",
             "\\EXE\\tnsnames.ora",
             "\\EXE_API\\BL\\config\\BILLING\\database-Info.properties",
@@ -37,59 +33,32 @@ public class main {
             "\\EXE_WEBIP\\config\\server-applicationContext.properties"
     };
 
-
-    public static void main(String[] args) throws FileNotFoundException{
+    public static void main(String[] args) throws FileNotFoundException, IOException {
         List<String> listDomainURL = Arrays.asList(arrURL);
-        for (String item:listDomainURL){
+        for (String item : listDomainURL) {
             String url = rootURL + item;
+
             //Đọc file
-            String textOut = readFile(url);
+            String textOut = new String(Files.readAllBytes(Paths.get(url)), StandardCharsets.UTF_8);
+
             //Thay đổi nội dung file
-            String resultContent = changeContent(textOut, actual_ST, expected_ST);
-            resultContent = changeContent(resultContent, actual_EDI, expected_EDI);
-            resultContent = changeContent(resultContent, actual_IF, expected_IF);
-            resultContent = changeContent(resultContent, actual_Host, expected_Host);
-            resultContent = changeContent(resultContent, actual_Orcl, expected_Orcl);
-            resultContent = changeContent(resultContent, actual_Local, expected_Local);
+            String resultContent = textOut.replaceAll(actual_ST, expected_ST);
+            resultContent = resultContent.replaceAll(actual_EDI, expected_EDI);
+            resultContent = resultContent.replaceAll(actual_IF, expected_IF);
+            resultContent = resultContent.replaceAll(actual_Port, expected_Port);
+            resultContent = resultContent.replaceAll(actual_Orcl, expected_Orcl);
+            resultContent = resultContent.replaceAll(actual_Host, expected_Host);
+            resultContent = resultContent.replaceAll(actual_Project, expected_Project);
+
             //Ghi file mới
-            saveFile(resultContent, url);
+            try {
+                FileWriter fw = new FileWriter(url);
+                fw.write(resultContent);
+                fw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         System.out.println("SUCCESS!");
-    }
-
-    //Đổi thông tin config
-    public static String changeContent(String content, String actual, String expected){
-        return content.replaceAll(actual, expected);
-    }
-
-    // Đọc dữ liệu từ File với Scanner
-    public static String readFile(String url) throws FileNotFoundException {
-        FileInputStream fileInputStream = new FileInputStream(url);
-        Scanner scanner = new Scanner(fileInputStream);
-        String textOut = "";
-        try {
-            while (scanner.hasNextLine()) {
-                String nextLine = scanner.nextLine();
-                textOut = textOut + nextLine + "\n";
-            }
-        } finally {
-            try {
-                scanner.close();
-                fileInputStream.close();
-            } catch (IOException ex) {
-                ex.getStackTrace();
-            }
-        }
-        return textOut;
-    }
-
-    public static void saveFile(String textOut, String url){
-        try {
-            FileWriter fw = new FileWriter(url);
-            fw.write(textOut);
-            fw.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
     }
 }
